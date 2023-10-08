@@ -1,16 +1,37 @@
-# This is a sample Python script.
+# Heizung Raspberry Pi
+# bei jeden Aufruf: DS18B20 Temperatur Sensoren Abfragen und in externe Datenbank schreiben
+# V1.0 07.10.2023
+# © 2023 Holger Hunger
 
-# Press Umschalt+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# TODO: dot env zufügen
+# TODO: Logging einbinden
+# TODO: datenbank anbindung
+# TODO: Daten abfragen und gemeinsam senden
+
+from dlpio8ds import DlpIo8Ds
+import os
+from models import Data
+from database import SessionLocal # , engine
+from typing import Annotated
+from sqlalchemy.orm import Session
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hallo, {name}')  # Press Strg+F8 to toggle the breakpoint.
+username = os.environ.get("username")
+password = os.environ.get("password")
 
+dlp = DlpIo8Ds()
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# db = Annotated[Session, get_db]
+
+for temp_nr in range(0, 5):
+    print(f"Temp Sensor Nr {temp_nr}: {dlp.read_temp(temp_nr)}°C")
+
+with Annotated[Session, get_db] as db:
+    print(db.query(Data).all())

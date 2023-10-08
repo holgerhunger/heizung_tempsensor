@@ -2,10 +2,17 @@ import serial
 import time
 import sys
 
-
 class DlpIo8Ds:
 
     def __init__(self, port="/dev/ttyUSB0"):
+        self.MESSSTELLEN_KENNUNG = ['HZHKVL',
+                                    'HZHKRL',
+                                    'HZWWVVM',
+                                    'HZWWVNM',
+                                    'HZWWRL',
+                                    'NA',
+                                    'NA',
+                                    'NA']
         self.MESSSTELLEN_NAME = ['Heizkreis Vorlauf',
                                  'Heizkreis Rücklauf',
                                  'WW Vorlauf vor Mischer',
@@ -23,7 +30,6 @@ class DlpIo8Ds:
                            parity=serial.PARITY_NONE,
                            timeout=20000) as ser:
             #DLP Ping
-            # print('DLP Ping: ', end='')
             ser.write(self.DLP_PING_COMMAND)
             response = ser.read(1)
             if response != b'Q':
@@ -31,7 +37,6 @@ class DlpIo8Ds:
                 sys.exit(1)
             else:
                 pass
-                # print('OK!')
             #DLP set to °C
             ser.write(self.DLP_SET_C_COMMAND)
 
@@ -46,12 +51,10 @@ class DlpIo8Ds:
 
             for loop in range(0, 5):
                 time.sleep(0.1)
-                # print(f"write data: {self.DLP_TEMP_READ_COMMANDS[sensor_nr]}   ", end='')
                 ser.write(self.DLP_TEMP_READ_COMMANDS[sensor_nr])
                 response = ser.readline().decode('cp437').rstrip()
-                # print(f"read data: X{response}X   ", end='')
                 temp_float = float(response[:-2])
                 if temp_float != 999.99:
                     break
 
-            return self.MESSSTELLEN_NAME[sensor_nr], temp_float
+            return self.MESSSTELLEN_NAME[sensor_nr], self.MESSSTELLEN_KENNUNG[sensor_nr], temp_float
